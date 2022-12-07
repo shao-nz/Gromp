@@ -5,6 +5,9 @@ from discord.ext import commands
 import json
 import requests
 import asset_utils
+import rune_buttons as rb
+import lol_constants.types as lol_types
+import time
 
 import os
 from dotenv import load_dotenv
@@ -32,6 +35,8 @@ async def on_ready():
     summoner="Summoner name"
 )
 async def live(ctx, summoner):
+    start = time.time()
+
     await ctx.interaction.response.defer()
 
     blue_team = list()
@@ -51,9 +56,9 @@ async def live(ctx, summoner):
     url1 = f"{RIOT_SERVICE_BASEURL}api/riot/currentGameInfo/{summoner_id}"
     r1 = requests.get(url1, verify=False)
 
-    if r1.status_code != requests.codes.ok:
-        await ctx.interaction.followup.send(f"Summoner {summoner} is not in game.")
-        return
+    # if r1.status_code != requests.codes.ok:
+    #     await ctx.interaction.followup.send(f"Summoner {summoner} is not in game.")
+    #     return
 
     game_data = json.loads(r1.json())
 
@@ -66,10 +71,7 @@ async def live(ctx, summoner):
     with open("lol_constants/queues.json") as f:
         queues = json.load(f)
 
-    queue_dict = {
-        "Ranked Flex": "RANKED_FLEX_SR",
-        "Ranked Solo/Duo": "RANKED_SOLO_5x5",
-    }
+    summoners = list()
 
     try:
         queue_id = str(game_data["gameQueueConfigId"])
@@ -81,30 +83,38 @@ async def live(ctx, summoner):
         participants = game_data["participants"]
         for participant in participants:
             curr_name = participant["summonerName"]
-
             curr_id = participant["summonerId"]
+
             summoner_url = f"{RIOT_SERVICE_BASEURL}api/riot/lolBySummoner/{curr_id}"
             r2 = requests.get(summoner_url, verify=False)
             curr_summoner = json.loads(r2.json())
             curr_division = ""
+
             if not curr_summoner:
                 rank_emote = get_emote_str("UNRANKED")
             else:
                 if "Normal" in queue_name or "ARAM" in queue_name:
                     queue_name = "Ranked Solo/Duo"
                 curr_queue = next(
-                    queue for queue in curr_summoner if queue_dict[queue_name] == queue["queueType"])
+                    queue for queue in curr_summoner if types.QUEUES[queue_name] == queue["queueType"])
                 rank_emote = get_emote_str(curr_queue["tier"])
                 curr_division = curr_queue["rank"]
+
             champ = next(champ for champ in champs if champs[champ]["key"] == str(
                 participant["championId"]))
             champ_emote = get_emote_str(champ)
+
+            summoners.append([get_emote_str(champ), participant, champ])
+
+            if curr_name == summoner_name:
+                curr_name = f"__**{curr_name}**__"
             if participant["teamId"] == 100:
                 blue_team.append(
                     f"{champ_emote} {curr_name} ({rank_emote} {curr_division})")
             else:
                 red_team.append(
                     f"{champ_emote} {curr_name} ({rank_emote} {curr_division})")
+
         map_name = [map for map in maps if map["mapId"]
                     == game_data["mapId"]][0]["mapName"]
         map_id = str(game_data["mapId"])
@@ -113,22 +123,26 @@ async def live(ctx, summoner):
         await ctx.interaction.followup.send(f"{summoner_name} is not in game.")
         return
 
+    time_taken = time.time() - start
     msg = f"Currently playing {queue_data['name']}, {map_name}"
     live_deets = discord.Embed(title=f"{summoner_name}",
                                description=msg,
                                color=0xff00ff)
     live_deets.set_thumbnail(
         url=asset_utils.get_game_icon_path(map_id, game_mode))
-    live_deets.add_field(name="Blue Team",
+    live_deets.add_field(name=f"{lol_types.DISCORD_EMOJI['blue_square']} Blue Team",
                          value="\n".join(blue_team),
                          inline=True)
-    live_deets.add_field(name="Red Team",
+    live_deets.add_field(name=f"{lol_types.DISCORD_EMOJI['red_square']} Red Team",
                          value="\n".join(red_team),
                          inline=True)
     live_deets.set_image(
         url=asset_utils.get_parties_bg_path(map_id, game_mode))
+    live_deets.set_footer(text="Took {:.2f} seconds".format(time_taken))
 
-    await ctx.interaction.followup.send(embed=live_deets)
+    rune_buttons = rb.RuneButtons(summoners=summoners)
+    await ctx.interaction.followup.send(embed=live_deets, view=rune_buttons)
+
 
 def get_emote_str(emote_name):
     return next(
