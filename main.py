@@ -96,7 +96,7 @@ async def live(ctx, summoner):
                 if "Normal" in queue_name or "ARAM" in queue_name:
                     queue_name = "Ranked Solo/Duo"
                 curr_queue = next(
-                    queue for queue in curr_summoner if types.QUEUES[queue_name] == queue["queueType"])
+                    queue for queue in curr_summoner if lol_types.QUEUES[queue_name] == queue["queueType"])
                 rank_emote = get_emote_str(curr_queue["tier"])
                 curr_division = curr_queue["rank"]
 
