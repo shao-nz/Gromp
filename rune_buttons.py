@@ -24,6 +24,9 @@ class SummonerRunes(discord.ui.Button):
         await interaction.response.defer()
 
         rune_emoji = [lol_types.LOL_EMOJI[id] for id in self.perk_ids]
+        primary_path = lol_types.LOL_EMOJI[self.perk_style]
+        secondary_path = lol_types.LOL_EMOJI[self.perk_sub_style]
+        shard = lol_types.LOL_EMOJI["runes"]
         primary_emoji = rune_emoji[:4]
         secondary_emoji = rune_emoji[4:6]
         stat_emoji = rune_emoji[6:]
@@ -39,16 +42,16 @@ class SummonerRunes(discord.ui.Button):
             url=asset_utils.get_champion_portrait(self.champion_id))
         rune_deets.add_field(
             name="Summoner Spells", value=f"{spell1_emoji} {spell2_emoji}", inline=False)
-
-        # rune_deets.add_field(name="Runes", value="", inline=False)
-        rune_deets.add_field(name="Prim.", value="\n".join(
+        rune_deets.add_field(name=f"Runes\n{primary_path}", value="\n".join(
             primary_emoji), inline=True)
-        rune_deets.add_field(name="Sec.", value="\n".join(
+        rune_deets.add_field(name=f"\u200b\n{secondary_path}", value="\n".join(
             secondary_emoji), inline=True)
         rune_deets.add_field(
-            name="Stats", value="\n".join(stat_emoji), inline=True)
+            name=f"\u200b\n{shard}", value="\n".join(stat_emoji), inline=True)
         rune_deets.set_footer(
             text="Took {:.2f} seconds".format(time_taken))
+        
+        # self.disabled = True
         await interaction.followup.send(embed=rune_deets)
 
 
