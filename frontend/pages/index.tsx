@@ -26,20 +26,20 @@ export default function Home() {
       </Head>
 
       <main
-        className={`h-auto w-screen max-w-none min-h-screen bg-gradient-to-tl from-amber-700 to-lime-500 items-center ${sourceSansPro.className}`}
+        className={`flex flex-col h-auto w-screen max-w-none min-h-screen bg-gradient-to-tl from-amber-700 to-lime-500 items-center justify-center ${sourceSansPro.className}`}
       >
-        <section className="pt-[15vh] flex flex-col items-center gap-3">
+        <section className="flex flex-col items-center gap-3">
           <h1 className="text-6xl md:text-8xl text-center font-black">GROMP</h1>
           <h3 className="text-sm md:text-md text-center">Coming soon...</h3>
-          <Image src={grompFull} alt="Gromp.gg logo" className="w-36 md:w-96" />
+          <Image src={grompFull} alt="Gromp.gg logo" className="w-36 lg:w-96" />
           <h1 className="text-2xl text-center px-10 md:text-4xl">
             Multipurpose League of Legends Discord Bot.
           </h1>
-          <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {features.map((feature, index) => {
               return (
                 <code
-                  className="rounded-lg px-2 py-1 bg-lime-300 text-xs md:text-lg"
+                  className="rounded-lg px-2 py-1 bg-lime-300 text-xs lg:text-lg"
                   key={index}
                 >
                   {feature}
